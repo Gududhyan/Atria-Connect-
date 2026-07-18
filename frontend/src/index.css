@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --surface: #ffffff;
+    --surface-soft: #f8fafc;
+    --muted: #eef2ff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --primary: #d02691;
+    --primary-dark: #9d155d;
+    --shadow-soft: 0 20px 45px rgba(15, 23, 42, 0.08);
+    --shadow-card: 0 18px 50px rgba(15, 23, 42, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', 'DM Sans', sans-serif;
+    background: radial-gradient(circle at top left, rgba(99,102,241,0.12), transparent 24%),
+                radial-gradient(circle at bottom right, rgba(236,72,153,0.1), transparent 20%),
+                #f8fbff;
+    color: var(--text);
+    min-height: 100vh;
+  }
+  button, input, select, textarea { font: inherit; }
+  body, button, input, select, textarea { font-family: 'Poppins', 'Inter', sans-serif; }
+  .font-heading { font-family: 'Playfair Display', serif; letter-spacing: -0.02em; }
+  #sidebar.open { transform: translateX(0); }
+}
+
+@layer utilities {
+  .fade-in { animation: fadeIn 0.28s ease-out; }
+  .slide-in { animation: slideIn 0.28s ease-out; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 999px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+  button, input, select, textarea { transition: box-shadow 0.2s ease, transform 0.15s ease, background-color 0.2s ease; }
+  button:hover { transform: translateY(-0.5px); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(208, 38, 145, 0.14);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(208, 38, 145, 0.12);
+  border-color: #d02691;
+}
+
+@media print {
+  .no-print { display: none !important; }
+}
