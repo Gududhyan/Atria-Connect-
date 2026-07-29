@@ -22,7 +22,9 @@ async function request(path, options = {}) {
     config.headers.Authorization = `Bearer ${authToken}`
   }
 
-  if (config.body && typeof config.body !== 'string') {
+  if (config.body instanceof FormData) {
+    delete config.headers['Content-Type']
+  } else if (config.body && typeof config.body !== 'string') {
     config.body = JSON.stringify(config.body)
   }
 
@@ -92,4 +94,10 @@ export async function bulkFacultyMapping(mappings) {
 
 export async function bulkDuesUpdate(dues) {
   return request('/students/bulk-dues', { method: 'POST', body: { dues } })
+}
+
+export async function uploadFile(file) {
+  const formData = new FormData()
+  formData.append('document', file)
+  return request('/upload', { method: 'POST', body: formData })
 }
