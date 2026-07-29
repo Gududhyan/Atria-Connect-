@@ -163,7 +163,8 @@ function generateStudent(sem, branchCode, section, rollNum) {
     feesDue: feesHash % 10 > 5 ? [15000, 25000, 35000, 50000, 75000, 100000][feesHash % 6] : null,
     ccApproval: null,
     adminApproval: null,
-    hallTicketIssued: false
+    hallTicketIssued: false,
+    documents: []
   }
 }
 
