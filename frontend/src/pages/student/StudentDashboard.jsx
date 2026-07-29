@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
+import { uploadFile } from '../../api'
 import { BRANCHES } from '../../data/mockData'
 import DashboardLayout from '../../components/DashboardLayout'
 import Badge from '../../components/Badge'
@@ -219,19 +220,27 @@ export default function StudentDashboard() {
                       Cancel
                     </button>
                     <button 
-                      onClick={() => {
-                        dispatch({
-                          type: 'UPLOAD_DOCUMENT',
-                          payload: {
-                            usn: student.usn,
-                            document: {
-                              name: pendingUpload.name,
-                              url: pendingUpload.url,
-                              uploadedAt: new Date().toISOString()
+                      onClick={async () => {
+                        try {
+                          // Upload to the backend
+                          const res = await uploadFile(pendingUpload.file)
+                          
+                          // Dispatch with the backend URL
+                          dispatch({
+                            type: 'UPLOAD_DOCUMENT',
+                            payload: {
+                              usn: student.usn,
+                              document: {
+                                name: pendingUpload.name,
+                                url: res.url, // the static URL returned by the backend
+                                uploadedAt: new Date().toISOString()
+                              }
                             }
-                          }
-                        });
-                        setPendingUpload(null);
+                          });
+                          setPendingUpload(null);
+                        } catch (err) {
+                          alert('Failed to upload file: ' + err.message)
+                        }
                       }}
                       className="px-3 py-1.5 rounded-lg text-xs font-bold bg-ok text-white hover:bg-ok-dark transition-colors shadow-sm"
                     >
