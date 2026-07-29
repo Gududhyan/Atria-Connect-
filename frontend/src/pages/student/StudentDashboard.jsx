@@ -4,6 +4,7 @@ import { BRANCHES } from '../../data/mockData'
 import DashboardLayout from '../../components/DashboardLayout'
 import Badge from '../../components/Badge'
 import PageHeader from '../../components/ui/PageHeader'
+import DocumentPreviewModal from '../../components/DocumentPreviewModal'
 
 const PLACEMENT_STYLES = {
   'Placed': { bg: 'bg-ok-light/40', border: 'border-ok/30', text: 'text-ok-dark', icon: 'fa-circle-check' },
@@ -16,6 +17,7 @@ const PLACEMENT_STYLES = {
 export default function StudentDashboard() {
   const { state, dispatch } = useApp()
   const [page, setPage] = useState('status')
+  const [previewDoc, setPreviewDoc] = useState(null)
   const user = state.currentUser
   const student = state.students.find(s => s.usn === user.usn)
 
@@ -210,9 +212,12 @@ export default function StudentDashboard() {
                         <p className="text-xs text-slate-400">{new Date(doc.uploadedAt).toLocaleString()}</p>
                       </div>
                     </div>
-                    <a href={doc.url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-atria hover:underline">
+                    <button 
+                      onClick={() => setPreviewDoc(doc)}
+                      className="text-sm font-semibold text-atria hover:underline"
+                    >
                       View
-                    </a>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -220,7 +225,14 @@ export default function StudentDashboard() {
           </div>
         </div>
 
+        {/* Document Preview Modal */}
+        <DocumentPreviewModal 
+          document={previewDoc} 
+          onClose={() => setPreviewDoc(null)} 
+        />
+
       </div>
+
     </DashboardLayout>
   )
 }
