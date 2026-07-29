@@ -18,6 +18,7 @@ export default function StudentDashboard() {
   const { state, dispatch } = useApp()
   const [page, setPage] = useState('status')
   const [previewDoc, setPreviewDoc] = useState(null)
+  const [pendingUpload, setPendingUpload] = useState(null)
   const user = state.currentUser
   const student = state.students.find(s => s.usn === user.usn)
 
@@ -172,20 +173,16 @@ export default function StudentDashboard() {
                   if (file) {
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                      dispatch({
-                        type: 'UPLOAD_DOCUMENT',
-                        payload: {
-                          usn: student.usn,
-                          document: {
-                            name: file.name,
-                            url: ev.target.result,
-                            uploadedAt: new Date().toISOString()
-                          }
-                        }
+                      setPendingUpload({
+                        name: file.name,
+                        url: ev.target.result,
+                        file: file
                       });
                     };
                     reader.readAsDataURL(file);
                   }
+                  // Reset input so the same file can be selected again if canceled
+                  e.target.value = '';
                 }}
               />
               <label
@@ -197,6 +194,54 @@ export default function StudentDashboard() {
             </div>
           </div>
           <div className="p-6">
+            {pendingUpload && (
+              <div className="mb-6 p-4 rounded-xl border border-sky-200 bg-sky-50 shadow-sm animate-fade-in">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center">
+                      <i className="fas fa-file-alt"></i>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-800">Pending Upload: {pendingUpload.name}</h3>
+                      <button 
+                        onClick={() => setPreviewDoc({ name: pendingUpload.name, url: pendingUpload.url })}
+                        className="text-xs text-atria hover:underline mt-0.5 font-semibold"
+                      >
+                        Preview File
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setPendingUpload(null)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={() => {
+                        dispatch({
+                          type: 'UPLOAD_DOCUMENT',
+                          payload: {
+                            usn: student.usn,
+                            document: {
+                              name: pendingUpload.name,
+                              url: pendingUpload.url,
+                              uploadedAt: new Date().toISOString()
+                            }
+                          }
+                        });
+                        setPendingUpload(null);
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-ok text-white hover:bg-ok-dark transition-colors shadow-sm"
+                    >
+                      Confirm Upload
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {(!student.documents || student.documents.length === 0) ? (
               <p className="text-sm text-slate-500 text-center py-4">No documents uploaded yet.</p>
             ) : (
