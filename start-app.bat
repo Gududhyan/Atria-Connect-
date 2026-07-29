@@ -1,5 +1,5 @@
 @echo off
-cd /d "c:\Users\Dhyan v\Desktop\no-dues-project\NO-DUE"
+cd /d "%~dp0"
 start "Backend Server" cmd /k "cd backend && npm run dev"
 timeout /t 3
 start "Frontend Server" cmd /k "cd frontend && npm run dev"
