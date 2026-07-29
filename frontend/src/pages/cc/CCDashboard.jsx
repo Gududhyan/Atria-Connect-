@@ -134,6 +134,29 @@ export default function CCDashboard() {
                     ))}
                   </div>
                 </div>
+                
+                {/* Uploaded Documents */}
+                <div>
+                  <h4 className="text-sm font-bold text-slate-700 mb-2">Uploaded Documents</h4>
+                  {(!detail.documents || detail.documents.length === 0) ? (
+                    <p className="text-xs text-slate-500 italic">No documents uploaded.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {detail.documents.map((doc, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                          <div className="flex items-center gap-2 truncate pr-2">
+                            <i className="fas fa-file-alt text-slate-400"></i>
+                            <span className="text-sm font-medium text-slate-700 truncate">{doc.name}</span>
+                          </div>
+                          <a href={doc.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-atria hover:underline whitespace-nowrap">
+                            View
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
               </div>
             </div>
           </div>

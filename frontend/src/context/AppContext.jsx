@@ -55,6 +55,15 @@ function appReducer(state, action) {
       const { usn, password } = action.payload
       return { ...state, students: state.students.map(s => s.usn === usn ? { ...s, password } : s) }
     }
+    case 'UPLOAD_DOCUMENT': {
+      const { usn, document } = action.payload
+      return { 
+        ...state, 
+        students: state.students.map(s => 
+          s.usn === usn ? { ...s, documents: [...(s.documents || []), document] } : s
+        ) 
+      }
+    }
     case 'BULK_UPLOAD_STUDENTS': {
       const { newStudents } = action.payload
       const existingUSNs = new Set(state.students.map(s => s.usn))

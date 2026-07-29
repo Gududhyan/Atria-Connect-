@@ -14,7 +14,7 @@ const PLACEMENT_STYLES = {
 }
 
 export default function StudentDashboard() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const [page, setPage] = useState('status')
   const user = state.currentUser
   const student = state.students.find(s => s.usn === user.usn)
@@ -152,6 +152,74 @@ export default function StudentDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Uploaded Documents */}
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+            <div>
+              <h2 className="text-base font-bold text-slate-800">Uploaded Documents</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Upload certificates and clearance proofs</p>
+            </div>
+            <div>
+              <input
+                type="file"
+                id="docUpload"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      dispatch({
+                        type: 'UPLOAD_DOCUMENT',
+                        payload: {
+                          usn: student.usn,
+                          document: {
+                            name: file.name,
+                            url: ev.target.result,
+                            uploadedAt: new Date().toISOString()
+                          }
+                        }
+                      });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+              <label
+                htmlFor="docUpload"
+                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-atria text-white rounded-xl text-sm font-bold shadow-md hover:bg-atria-dark transition-colors"
+              >
+                <i className="fas fa-upload"></i> Upload
+              </label>
+            </div>
+          </div>
+          <div className="p-6">
+            {(!student.documents || student.documents.length === 0) ? (
+              <p className="text-sm text-slate-500 text-center py-4">No documents uploaded yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {student.documents.map((doc, idx) => (
+                  <li key={idx} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center">
+                        <i className="fas fa-file-alt"></i>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-700">{doc.name}</p>
+                        <p className="text-xs text-slate-400">{new Date(doc.uploadedAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <a href={doc.url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-atria hover:underline">
+                      View
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
       </div>
     </DashboardLayout>
   )
