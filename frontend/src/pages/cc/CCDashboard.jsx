@@ -34,8 +34,8 @@ export default function CCDashboard() {
           </div>
         </Card>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+        <div className="card overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#E8ECF2] bg-slate-50/60 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700">{filtered.length} students found</p>
           </div>
           <div className="max-h-[55vh] overflow-y-auto scrollbar-thin">
@@ -98,7 +98,7 @@ export default function CCDashboard() {
         {/* Detail Modal */}
         {detail && (
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDetail(null)}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden fade-in" onClick={e => e.stopPropagation()}>
+            <div className="card rounded-[20px] shadow-modal w-full max-w-3xl max-h-[85vh] overflow-hidden fade-in" onClick={e => e.stopPropagation()}>
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-slate-800">{detail.usn}</h3>

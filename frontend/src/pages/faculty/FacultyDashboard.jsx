@@ -124,7 +124,7 @@ export default function FacultyDashboard() {
           </div>
         </Card>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <div className="flex items-start gap-3 px-4 py-3.5 bg-amber-50 border border-amber-200 rounded-xl mb-5">
           <i className="fas fa-triangle-exclamation text-amber-600 mt-0.5"></i>
           <div>
             <p className="text-sm font-semibold text-amber-800">Important</p>
@@ -132,8 +132,8 @@ export default function FacultyDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+        <div className="card overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#E8ECF2] bg-slate-50/60">
             <p className="text-sm font-semibold text-slate-700">{filtered.length} students with your assigned subjects</p>
           </div>
           {filtered.length === 0 ? (
@@ -142,7 +142,7 @@ export default function FacultyDashboard() {
               <p className="text-sm text-slate-500">No students found with your assigned subjects in this selection</p>
             </div>
           ) : (
-            <div className="max-h-[50vh] overflow-y-auto scrollbar-thin">
+            <div className="max-h-[60vh] overflow-y-auto scrollbar-thin">
               <table className="w-full">
                 <thead className="sticky top-0 bg-white z-10">
                   <tr className="border-b border-slate-100">

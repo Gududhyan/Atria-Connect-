@@ -1,13 +1,11 @@
 export default function PageHeader({ title, subtitle, action }) {
   return (
-    <div className="mb-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-display font-semibold text-slate-900">{title}</h1>
-          {subtitle && <p className="text-sm text-slate-500 mt-2 max-w-2xl">{subtitle}</p>}
-        </div>
-        {action && <div className="flex items-center gap-2">{action}</div>}
+    <div className="flex items-start justify-between gap-4 mb-5">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h2>
+        {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
       </div>
+      {action && <div className="flex-shrink-0">{action}</div>}
     </div>
   )
 }

@@ -64,6 +64,15 @@ function appReducer(state, action) {
         ) 
       }
     }
+    case 'REMOVE_DOCUMENT': {
+      const { usn, documentUrl } = action.payload
+      return {
+        ...state,
+        students: state.students.map(s => 
+          s.usn === usn ? { ...s, documents: (s.documents || []).filter(d => d.url !== documentUrl) } : s
+        )
+      }
+    }
     case 'BULK_UPLOAD_STUDENTS': {
       const { newStudents } = action.payload
       const existingUSNs = new Set(state.students.map(s => s.usn))

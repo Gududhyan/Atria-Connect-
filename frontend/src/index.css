@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,65 +6,88 @@
 
 @layer base {
   :root {
-    --surface: #ffffff;
-    --surface-soft: #f8fafc;
-    --muted: #eef2ff;
-    --border: #e2e8f0;
-    --text: #0f172a;
-    --text-muted: #64748b;
-    --primary: #d02691;
-    --primary-dark: #9d155d;
-    --shadow-soft: 0 20px 45px rgba(15, 23, 42, 0.08);
-    --shadow-card: 0 18px 50px rgba(15, 23, 42, 0.12);
+    --accent: #C41E3A;
+    --accent-dark: #9B1830;
+    --sidebar-w: 260px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+
   body {
-    font-family: 'Inter', 'DM Sans', sans-serif;
-    background: radial-gradient(circle at top left, rgba(99,102,241,0.12), transparent 24%),
-                radial-gradient(circle at bottom right, rgba(236,72,153,0.1), transparent 20%),
-                #f8fbff;
-    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #EEF1F8;
+    color: #0f172a;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
   }
+
   button, input, select, textarea { font: inherit; }
-  body, button, input, select, textarea { font-family: 'Poppins', 'Inter', sans-serif; }
-  .font-heading { font-family: 'Playfair Display', serif; letter-spacing: -0.02em; }
   #sidebar.open { transform: translateX(0); }
 }
 
 @layer utilities {
-  .fade-in { animation: fadeIn 0.28s ease-out; }
-  .slide-in { animation: slideIn 0.28s ease-out; }
-  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-  .scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 999px; }
-  .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  .shadow-soft { box-shadow: var(--shadow-soft); }
-  .shadow-card { box-shadow: var(--shadow-card); }
-  button, input, select, textarea { transition: box-shadow 0.2s ease, transform 0.15s ease, background-color 0.2s ease; }
-  button:hover { transform: translateY(-0.5px); }
-  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(208, 38, 145, 0.14);
+  /* 10px micro text */
+  .text-2xs { font-size: 10px; line-height: 14px; }
+  
+  /* Entrance animations */
+  .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .slide-up { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  /* Card surface */
+  .card {
+    background: #ffffff;
+    border: 1px solid #E8ECF2;
+    border-radius: 16px;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.05), 0 4px 16px rgba(15,23,42,0.04);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
+  .card:hover { box-shadow: 0 2px 8px rgba(15,23,42,0.08), 0 8px 24px rgba(15,23,42,0.06); }
+
+  /* Stat widget */
+  .stat-card {
+    background: #ffffff;
+    border: 1px solid #E8ECF2;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.04);
+  }
+
+  /* Scrollbars */
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+  /* Input focus */
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.12);
+    border-color: var(--accent) !important;
+  }
+
+  /* Transitions */
+  button { transition: background-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
+  button:active { transform: scale(0.98); }
+}
+
+/* Keep enterprise-card for backward compatibility */
+.enterprise-card {
+  background: #ffffff;
+  border: 1px solid #E8ECF2;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.05), 0 4px 16px rgba(15,23,42,0.04);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-12px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(208, 38, 145, 0.12);
-  border-color: #d02691;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media print {

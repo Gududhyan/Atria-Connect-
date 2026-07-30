@@ -1,136 +1,162 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
-import Button from '../components/ui/Button'
-import Card from '../components/Card'
 import { LOGO_URL } from '../utils/helpers'
 
 const ROLES = [
-  { id: 'admin', label: 'Administrator', icon: 'fa-user-shield', desc: 'Assign faculties & approve', color: 'from-atria to-atria-dark' },
-  { id: 'account', label: 'Accounts', icon: 'fa-indian-rupee-sign', desc: 'Manage fees & dues', color: 'from-emerald-500 to-emerald-700' },
-  { id: 'cc', label: 'Class Coordinator', icon: 'fa-clipboard-check', desc: 'Review & approve', color: 'from-amber-500 to-amber-700' },
-  { id: 'faculty', label: 'Faculty', icon: 'fa-chalkboard-user', desc: 'Subject clearance', color: 'from-sky-500 to-sky-700' },
-  { id: 'student', label: 'Student', icon: 'fa-graduation-cap', desc: 'View no due status', color: 'from-violet-500 to-violet-700' }
+  { id: 'admin',   label: 'Administrator',     icon: 'fa-user-shield',     color: '#C41E3A', bg: '#FEF1F3' },
+  { id: 'account', label: 'Accounts',          icon: 'fa-coins',           color: '#16A34A', bg: '#F0FDF4' },
+  { id: 'cc',      label: 'Class Coordinator', icon: 'fa-clipboard-check', color: '#D97706', bg: '#FFFBEB' },
+  { id: 'faculty', label: 'Faculty',           icon: 'fa-chalkboard-user', color: '#0284C7', bg: '#F0F9FF' },
+  { id: 'student', label: 'Student',           icon: 'fa-graduation-cap',  color: '#7C3AED', bg: '#F5F3FF' },
 ]
 
 export default function LoginPage() {
   const { loginUser } = useApp()
-  const [role, setRole] = useState('')
+  const [role, setRole]       = useState('')
   const [username, setUsername] = useState('')
-  const [usn, setUsn] = useState('')
+  const [usn, setUsn]         = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError]     = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPass, setShowPass] = useState(false)
 
   const handleLogin = async () => {
     setError('')
-    if (!role) { setError('Please select a role'); return }
-    
+    if (!role) { setError('Please select a role first'); return }
     if (role === 'student') {
-      if (!usn.trim()) { setError('Please enter your USN'); return }
+      if (!usn.trim())      { setError('Please enter your USN'); return }
       if (!password.trim()) { setError('Please enter your password'); return }
     } else {
       if (!username.trim()) { setError('Please enter your username'); return }
       if (!password.trim()) { setError('Please enter your password'); return }
     }
-
     setLoading(true)
     try {
-      if (role === 'student') {
-        await loginUser({ role, usn: usn.toUpperCase(), password })
-      } else {
-        await loginUser({ role, username, password })
-      }
-    } catch (error) {
-      setError(error.message || 'Login failed')
+      await loginUser(role === 'student'
+        ? { role, usn: usn.toUpperCase(), password }
+        : { role, username, password })
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !loading) {
-      handleLogin()
-    }
-  }
+  const onKey = e => { if (e.key === 'Enter' && !loading) handleLogin() }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(208,38,145,0.16),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(14,165,233,0.14),_transparent_20%),linear-gradient(180deg,_#f8fbff_0%,_#ffffff_52%,_#f9f1f8_100%)]">
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-300 via-fuchsia-200 to-transparent opacity-70 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-sky-300 via-cyan-200 to-transparent opacity-75 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-10">
-        <div className="text-center mb-10 fade-in">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full border border-slate-200 bg-white shadow-card overflow-hidden">
-            <img src={LOGO_URL} alt="Atria logo" className="h-full w-full object-cover" />
+    <div className="min-h-screen bg-[#F4F6FA] flex items-center justify-center p-4">
+      {/* Decorative background shapes */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-atria/5" />
+        <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full bg-violet-500/5" />
+      </div>
+
+      <div className="relative w-full max-w-[480px] fade-in">
+
+        {/* Branding */}
+        <div className="text-center mb-8">
+          <div className="inline-flex w-16 h-16 rounded-2xl overflow-hidden border border-[#E8ECF2] bg-white mb-4"
+            style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.08)' }}>
+            <img src={LOGO_URL} alt="Atria" className="w-full h-full object-cover" />
           </div>
-          <h1 className="font-heading text-5xl font-semibold text-slate-900 tracking-tight uppercase">ATRIA NO DUE</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-slate-500 leading-7">
-            A polished clearance portal for institute staff and students. Sign in to manage dues, approvals, assignments, and no-due status with ease.
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Atria No Due Portal</h1>
+          <p className="text-sm text-slate-500 mt-1.5">Sign in to manage hall ticket clearances</p>
         </div>
-        <Card className="w-full max-w-xl mx-auto overflow-hidden fade-in rounded-[2rem] border border-white/40 bg-white/70 backdrop-blur-xl shadow-card shadow-slate-200/30">
-          <div className="p-6 pb-4">
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Select Role</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+
+        {/* Card */}
+        <div className="card overflow-hidden" style={{ boxShadow: '0 4px 30px rgba(15,23,42,0.08)' }}>
+          
+          {/* Role Selector */}
+          <div className="p-5 border-b border-[#E8ECF2]">
+            <p className="text-2xs font-bold text-slate-400 uppercase tracking-[0.15em] mb-3">Select Your Role</p>
+            <div className="grid grid-cols-5 gap-2">
               {ROLES.map(r => (
-                <button key={r.id} onClick={() => { setRole(r.id); setError('') }}
-                  className={`flex min-h-[108px] flex-col items-center justify-between rounded-2xl border-2 px-3 py-4 text-center transition-all ${
-                    role === r.id ? 'border-atria bg-atria-pale shadow-sm' : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
-                  }`}>
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${r.color} flex items-center justify-center mb-2 shadow-sm`}>
-                    <i className={`fas ${r.icon} text-white text-sm`}></i>
+                <button key={r.id}
+                  onClick={() => { setRole(r.id); setError('') }}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
+                    role === r.id
+                      ? 'border-current shadow-sm'
+                      : 'border-[#E8ECF2] hover:border-slate-200 hover:bg-slate-50'
+                  }`}
+                  style={role === r.id ? { borderColor: r.color, background: r.bg } : {}}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: role === r.id ? r.color : '#F1F5F9' }}>
+                    <i className={`fas ${r.icon} text-xs`} style={{ color: role === r.id ? '#fff' : '#94A3B8' }} />
                   </div>
-                  <span className="text-[11px] font-semibold text-slate-700 leading-tight">{r.label}</span>
+                  <span className="text-[10px] font-semibold leading-tight text-center"
+                    style={{ color: role === r.id ? r.color : '#64748B' }}>
+                    {r.label}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
-          <div className="px-6 pb-6">
-            {role === 'student' && (
-              <div className="space-y-3 fade-in">
+
+          {/* Credentials */}
+          {role && (
+            <div className="p-5 space-y-4 fade-in">
+              {role === 'student' ? (
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">USN Number</label>
-                  <input type="text" value={usn} onChange={e => setUsn(e.target.value.toUpperCase())} onKeyPress={handleKeyPress} placeholder="e.g. 1AT23CG001"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-medium tracking-wider placeholder:text-slate-300 placeholder:font-sans placeholder:tracking-normal" />
+                  <label className="block text-2xs font-bold text-slate-500 uppercase tracking-[0.15em] mb-1.5">USN Number</label>
+                  <input type="text" value={usn}
+                    onChange={e => setUsn(e.target.value.toUpperCase())}
+                    onKeyPress={onKey}
+                    placeholder="1AT23CG001"
+                    className="w-full px-4 py-3 bg-slate-50 border border-[#E8ECF2] rounded-xl text-sm font-mono font-semibold tracking-widest placeholder:text-slate-300 placeholder:font-sans placeholder:tracking-normal placeholder:font-normal" />
                 </div>
+              ) : (
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyPress={handleKeyPress} placeholder="Enter your password"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300" />
-                  <p className="text-[11px] text-slate-400 mt-1"><i className="fas fa-info-circle mr-1"></i>Default password is your USN</p>
+                  <label className="block text-2xs font-bold text-slate-500 uppercase tracking-[0.15em] mb-1.5">Username</label>
+                  <input type="text" value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    onKeyPress={onKey}
+                    placeholder="Enter username"
+                    className="w-full px-4 py-3 bg-slate-50 border border-[#E8ECF2] rounded-xl text-sm placeholder:text-slate-300" />
                 </div>
+              )}
+
+              <div>
+                <label className="block text-2xs font-bold text-slate-500 uppercase tracking-[0.15em] mb-1.5">Password</label>
+                <div className="relative">
+                  <input type={showPass ? 'text' : 'password'} value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    onKeyPress={onKey}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 pr-12 bg-slate-50 border border-[#E8ECF2] rounded-xl text-sm placeholder:text-slate-300" />
+                  <button type="button" onClick={() => setShowPass(!showPass)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <i className={`fas ${showPass ? 'fa-eye-slash' : 'fa-eye'} text-xs`} />
+                  </button>
+                </div>
+                {role === 'student' && (
+                  <p className="text-2xs text-slate-400 mt-1.5 flex items-center gap-1">
+                    <i className="fas fa-circle-info" /> Default password is your USN
+                  </p>
+                )}
               </div>
-            )}
-            {role && role !== 'student' && (
-              <div className="space-y-3 fade-in">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Username</label>
-                  <input type="text" value={username} onChange={e => setUsername(e.target.value)} onKeyPress={handleKeyPress} placeholder="Enter your username"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300" />
+
+              {error && (
+                <div className="flex items-center gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl fade-in">
+                  <i className="fas fa-circle-exclamation text-red-500 text-xs flex-shrink-0" />
+                  <p className="text-sm text-red-700 font-medium">{error}</p>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyPress={handleKeyPress} placeholder="Enter password"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder:text-slate-300" />
-                </div>
-              </div>
-            )}
-            {role && (
-              <Button onClick={handleLogin} className="w-full mt-4" size="lg" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign In'}
-              </Button>
-            )}
-            {error && (
-              <div className="mt-3 p-3 bg-no-light border border-no/20 rounded-lg flex items-center gap-2 fade-in">
-                <i className="fas fa-circle-exclamation text-no text-xs"></i>
-                <p className="text-sm text-no font-medium">{error}</p>
-              </div>
-            )}
-          </div>
-        </Card>
+              )}
+
+              <button onClick={handleLogin} disabled={loading}
+                className="w-full h-11 bg-atria text-white rounded-xl text-sm font-bold shadow-sm hover:bg-atria-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]">
+                {loading
+                  ? <><i className="fas fa-spinner fa-spin mr-2" />Signing in...</>
+                  : <><i className="fas fa-arrow-right-to-bracket mr-2" />Sign In</>}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <p className="text-center text-2xs text-slate-400 mt-6">
+          Atria Institute of Technology © {new Date().getFullYear()}
+        </p>
       </div>
-      <footer className="relative z-10 text-center py-4">
-        <p className="text-xs text-slate-400">Atria Institute of Technology © 2025 — No Due Portal</p>
-      </footer>
     </div>
   )
 }
