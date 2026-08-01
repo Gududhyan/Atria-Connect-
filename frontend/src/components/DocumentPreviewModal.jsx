@@ -3,76 +3,171 @@ import Modal from './Modal'
 
 export default function DocumentPreviewModal({ document, onClose }) {
   const [blobUrl, setBlobUrl] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
+    let isMounted = true
+    let createdUrl = null
+
     if (!document || !document.url) {
       setBlobUrl(null)
+      setIsLoading(false)
+      setHasError(false)
       return
     }
 
-    // Convert Data URL to Blob URL for iframes to bypass browser security blocks on data URIs
-    if (document.url.startsWith('data:')) {
-      fetch(document.url)
+    const docUrl = document.url
+
+    // Handle Data URLs by converting to Blob URL for iframe rendering
+    if (docUrl.startsWith('data:')) {
+      setIsLoading(true)
+      setHasError(false)
+
+      fetch(docUrl)
         .then(res => res.blob())
         .then(blob => {
-          const url = URL.createObjectURL(blob)
-          setBlobUrl(url)
+          if (isMounted) {
+            createdUrl = URL.createObjectURL(blob)
+            setBlobUrl(createdUrl)
+            setIsLoading(false)
+          }
         })
-        .catch(() => setBlobUrl(document.url)) // Fallback if fetch fails
+        .catch(err => {
+          console.error('Blob conversion failed:', err)
+          if (isMounted) {
+            setBlobUrl(docUrl)
+            setIsLoading(false)
+          }
+        })
     } else {
-      setBlobUrl(document.url)
+      setBlobUrl(docUrl)
+      setIsLoading(false)
+      setHasError(false)
     }
 
     return () => {
-      // Clean up the object URL when modal unmounts
-      if (blobUrl && blobUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(blobUrl)
+      isMounted = false
+      if (createdUrl) {
+        URL.revokeObjectURL(createdUrl)
       }
     }
   }, [document])
 
   if (!document) return null
 
-  const isImage = document.url.startsWith('data:image/') || document.name.match(/\.(jpg|jpeg|png|gif|webp)$/i)
-  const isPdf = document.url.startsWith('data:application/pdf') || document.name.match(/\.pdf$/i)
-  
-  // Use blobUrl if available to prevent iframe blocking, otherwise fallback to the raw data url (for images)
-  const renderUrl = blobUrl || document.url
+  const name = document.name || 'Document'
+  const url = document.url || ''
+
+  // Robust document type matching
+  const isImage = 
+    url.startsWith('data:image/') || 
+    url.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i) || 
+    name.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i)
+
+  const isPdf = 
+    url.startsWith('data:application/pdf') || 
+    url.match(/\.pdf(\?.*)?$/i) || 
+    name.match(/\.pdf$/i) || 
+    (!isImage && (url.includes('/uploads/') || url.startsWith('blob:'))) // Default documents to PDF viewer fallback if unknown non-image
+
+  const renderUrl = blobUrl || url
+
+  const footer = (
+    <div className="w-full flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        {renderUrl && (
+          <a
+            href={renderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+          >
+            <i className="fas fa-arrow-up-right-from-square text-xs" />
+            Open in New Tab
+          </a>
+        )}
+        {renderUrl && (
+          <a
+            href={renderUrl}
+            download={name}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-atria hover:bg-atria-dark text-white rounded-xl text-xs font-semibold shadow-sm transition-colors"
+          >
+            <i className="fas fa-download text-xs" />
+            Download File
+          </a>
+        )}
+      </div>
+
+      <button
+        onClick={onClose}
+        className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-colors"
+      >
+        Cancel
+      </button>
+    </div>
+  )
 
   return (
-    <Modal title={`Preview: ${document.name}`} size="lg" onClose={onClose}>
-      <div className="w-full flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden min-h-[50vh]">
-        {isImage && (
-          <img 
-            src={renderUrl} 
-            alt={document.name} 
-            className="max-w-full max-h-[70vh] object-contain"
-          />
-        )}
-        {isPdf && blobUrl && (
-          <iframe 
-            src={renderUrl} 
-            title={document.name}
-            className="w-full h-[70vh] border-none"
-          />
-        )}
-        {isPdf && !blobUrl && (
-          <div className="flex flex-col items-center justify-center h-[50vh] text-slate-400">
-            <i className="fas fa-spinner fa-spin text-3xl mb-3"></i>
-            <p>Loading document preview...</p>
+    <Modal title={`Preview: ${name}`} size="lg" onClose={onClose} footer={footer}>
+      <div className="w-full flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden min-h-[55vh] relative">
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center p-12 text-slate-500 space-y-3">
+            <i className="fas fa-circle-notch fa-spin text-3xl text-atria" />
+            <p className="text-sm font-medium">Preparing document preview...</p>
           </div>
         )}
-        {!isImage && !isPdf && (
-          <div className="p-8 text-center">
-            <i className="fas fa-file-alt text-4xl text-slate-300 mb-4"></i>
-            <p className="text-slate-500 text-sm">Preview not available for this file type.</p>
-            <a 
-              href={renderUrl} 
-              download={document.name}
-              className="mt-4 inline-block px-4 py-2 bg-atria text-white rounded-lg text-sm font-semibold"
-            >
-              Download File
-            </a>
+
+        {!isLoading && isImage && (
+          <div className="p-4 flex items-center justify-center w-full h-full min-h-[55vh] max-h-[70vh] overflow-auto">
+            <img 
+              src={renderUrl} 
+              alt={name} 
+              className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-sm"
+              onError={() => setHasError(true)}
+            />
+          </div>
+        )}
+
+        {!isLoading && isPdf && !hasError && (
+          <div className="w-full h-[65vh] relative flex flex-col">
+            <iframe 
+              src={renderUrl} 
+              title={name}
+              className="w-full h-full border-none rounded-xl"
+              onError={() => setHasError(true)}
+            />
+          </div>
+        )}
+
+        {!isLoading && (hasError || (!isImage && !isPdf)) && (
+          <div className="p-10 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+              <i className="fas fa-file-pdf text-3xl text-atria" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-800">Document Display</h4>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">
+                Your browser cannot render this PDF inline. You can open it in a new window or download it below.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <a
+                href={renderUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold shadow hover:bg-slate-800 transition-colors inline-flex items-center gap-2"
+              >
+                <i className="fas fa-external-link-alt" /> Open PDF in New Window
+              </a>
+              <a
+                href={renderUrl}
+                download={name}
+                className="px-4 py-2 bg-atria text-white rounded-xl text-xs font-bold shadow hover:bg-atria-dark transition-colors inline-flex items-center gap-2"
+              >
+                <i className="fas fa-download" /> Download
+              </a>
+            </div>
           </div>
         )}
       </div>

@@ -166,39 +166,13 @@ export default function CCDashboard() {
                 </div>
 
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Document Preview Modal */}
-        {previewDoc && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={() => setPreviewDoc(null)}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col fade-in" onClick={e => e.stopPropagation()}>
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded bg-sky-100 text-sky-600 flex items-center justify-center">
-                    <i className="fas fa-file-alt"></i>
-                  </div>
-                  <h3 className="font-bold text-slate-800 truncate">{previewDoc.name}</h3>
-                </div>
-                <button onClick={() => setPreviewDoc(null)} className="w-8 h-8 rounded-lg hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
-                  <i className="fas fa-xmark text-lg"></i>
+              <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/80 flex items-center justify-end">
+                <button
+                  onClick={() => setDetail(null)}
+                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+                >
+                  Close
                 </button>
-              </div>
-              <div className="p-6 bg-slate-100 flex-1 overflow-auto flex justify-center items-center min-h-[50vh]">
-                {previewDoc.url?.startsWith('data:image/') ? (
-                  <img src={previewDoc.url} alt={previewDoc.name} className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-sm" />
-                ) : (
-                  <object data={previewDoc.url} className="w-full h-[75vh] rounded-lg shadow-sm bg-white" title={previewDoc.name}>
-                    <div className="flex flex-col items-center justify-center h-full text-slate-500 space-y-4">
-                      <i className="fas fa-file-pdf text-4xl text-slate-300"></i>
-                      <p>Browser cannot display this file inline.</p>
-                      <a href={previewDoc.url} download={previewDoc.name} className="px-4 py-2 bg-atria text-white rounded-lg text-sm font-bold shadow hover:bg-atria-dark transition-colors">
-                        Download File
-                      </a>
-                    </div>
-                  </object>
-                )}
               </div>
             </div>
           </div>
