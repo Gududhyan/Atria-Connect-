@@ -1,9 +1,28 @@
 {
-  "name": "atria-connect-root",
-  "version": "1.0.0",
+  "name": "atria-no-due-portal",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
-    "start": "node start-all.js",
-    "install:all": "cd backend && npm install && cd ../frontend && npm install"
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "node scripts/seed.mjs"
+  },
+  "dependencies": {
+    "@vercel/blob": "^0.27.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6",
+    "mongoose": "^8.9.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.7",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17"
   }
 }

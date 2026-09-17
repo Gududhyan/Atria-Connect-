@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --accent: #C41E3A;
+    --accent-dark: #9B1830;
+    --sidebar-w: 260px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+    background-color: #EEF1F8;
+    color: #0f172a;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
+
+  button, input, select, textarea { font: inherit; }
+  #sidebar.open { transform: translateX(0); }
+}
+
+@layer utilities {
+  .text-2xs { font-size: 10px; line-height: 14px; }
+
+  .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .slide-up { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  .card {
+    background: #ffffff;
+    border: 1px solid #E8ECF2;
+    border-radius: 16px;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.05), 0 4px 16px rgba(15,23,42,0.04);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .card:hover { box-shadow: 0 2px 8px rgba(15,23,42,0.08), 0 8px 24px rgba(15,23,42,0.06); }
+
+  .stat-card {
+    background: #ffffff;
+    border: 1px solid #E8ECF2;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.04);
+  }
+
+  html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scrollbar-thin { -webkit-overflow-scrolling: touch; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.12);
+    border-color: var(--accent) !important;
+  }
+
+  button { transition: background-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
+  button:active { transform: scale(0.98); }
+
+  /* Skeleton shimmer used by route-level loading.jsx files */
+  .skeleton {
+    background: linear-gradient(90deg, #EEF1F6 25%, #E2E8F0 37%, #EEF1F6 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 8px;
+  }
+}
+
+.enterprise-card {
+  background: #ffffff;
+  border: 1px solid #E8ECF2;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(15,23,42,0.05), 0 4px 16px rgba(15,23,42,0.04);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+}
