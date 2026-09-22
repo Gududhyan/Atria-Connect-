@@ -8,6 +8,17 @@ export const dynamic = 'force-dynamic'
 export default async function StudentPage() {
   const user = await getServerUser()
 
+  // Staff accounts have no USN — guard before DB call
+  if (!user?.usn) {
+    return (
+      <div className="card p-10 text-center">
+        <i className="fas fa-user-slash text-3xl text-slate-300 mb-3" />
+        <p className="text-sm font-semibold text-slate-600">No student record linked to your account.</p>
+        <p className="text-xs text-slate-400 mt-1">Please contact the administration office.</p>
+      </div>
+    )
+  }
+
   let student = null
   try {
     student = await getStudentByUsn(user.usn, user)
