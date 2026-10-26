@@ -4,6 +4,34 @@ import { useState, useRef } from 'react'
 import { parseCSV } from '@/lib/csv'
 import Badge from './Badge'
 
+const COLUMN_ALIASES = {
+  USN: ['usn', 'rollno', 'roll_no', 'rollnumber', 'roll_number', 'regno', 'reg_no', 'id', 'studentid', 'student_id'],
+  Name: ['name', 'studentname', 'student_name', 'fullname', 'full_name'],
+  BranchCode: ['branchcode', 'branch_code', 'branch', 'dept', 'department', 'course'],
+  Semester: ['semester', 'sem', 'term'],
+  Section: ['section', 'sec'],
+  Password: ['password', 'pwd', 'pass'],
+  Placement: ['placement', 'status', 'placementstatus', 'job_status'],
+  SubjectCode: ['subjectcode', 'subject_code', 'code', 'subject', 'subcode'],
+  Faculty: ['faculty', 'facultyname', 'faculty_name', 'teacher', 'professor', 'instructor'],
+  HostelDue: ['hosteldue', 'hostel_due', 'hostel'],
+  LibraryDue: ['librarydue', 'library_due', 'library'],
+  FeesDue: ['feesdue', 'fees_due', 'fees', 'fee', 'collegedue', 'tuitiondue']
+}
+
+const OPTIONAL_COLUMNS = new Set(['Password', 'Placement'])
+
+function findHeaderMatch(expectedCol, headers) {
+  const normExpected = expectedCol.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const aliases = (COLUMN_ALIASES[expectedCol] || []).map((a) => a.toLowerCase().replace(/[^a-z0-9]/g, ''))
+  aliases.push(normExpected)
+
+  return headers.find((h) => {
+    const normH = String(h).toLowerCase().replace(/[^a-z0-9]/g, '')
+    return aliases.includes(normH)
+  })
+}
+
 export default function CSVUploader({ title, description, columns, sampleCSV, onUpload, acceptText }) {
   const [preview, setPreview] = useState(null)
   const [error, setError] = useState('')
@@ -11,30 +39,60 @@ export default function CSVUploader({ title, description, columns, sampleCSV, on
   const [saving, setSaving] = useState(false)
   const [warning, setWarning] = useState('')
   const fileRef = useRef(null)
-  const lastUploadedSig = useRef(null)
 
   const handleFile = (e) => {
     const file = e.target.files[0]
     if (!file) return
     setError(''); setSuccess(''); setWarning(''); setPreview(null)
 
-    if (!file.name.endsWith('.csv')) { setError('Please upload a .csv file'); return }
+    if (!file.name.toLowerCase().endsWith('.csv')) { setError('Please upload a .csv file'); return }
 
     const reader = new FileReader()
     reader.onload = (evt) => {
       const content = evt.target.result
       const { headers, rows } = parseCSV(content)
       if (rows.length === 0) { setError('CSV file is empty or has no data rows'); return }
-      const missing = columns.filter((c) => !headers.includes(c))
-      if (missing.length > 0) { setError(`Missing columns: ${missing.join(', ')}`); return }
 
-      const signature = `${file.name}_${file.size}_${content.slice(0, 150)}_${rows.length}`
-      if (lastUploadedSig.current === signature) {
-        setError('This identical file was already uploaded in this session. Re-uploading the same duplicate set is not permitted.')
+      // Check required vs optional columns with aliases
+      const columnMapping = {}
+      const missing = []
+
+      for (const col of columns) {
+        const matchedHeader = findHeaderMatch(col, headers)
+        if (matchedHeader) {
+          columnMapping[col] = matchedHeader
+        } else if (!OPTIONAL_COLUMNS.has(col)) {
+          missing.push(col)
+        }
+      }
+
+      if (missing.length > 0) {
+        setError(`Missing required columns: ${missing.join(', ')}`)
         return
       }
 
-      setPreview({ headers, rows, total: rows.length, signature })
+      // Map rows with canonical column names
+      const normalizedRows = rows.map((r) => {
+        const rowObj = { ...r }
+        for (const [canonicalCol, actualHeader] of Object.entries(columnMapping)) {
+          const val = r[actualHeader]
+          rowObj[canonicalCol] = val
+          rowObj[canonicalCol.toLowerCase()] = val
+          if (canonicalCol === 'BranchCode') {
+            rowObj.branchCode = val
+            rowObj.branch = val
+          }
+          if (canonicalCol === 'SubjectCode') {
+            rowObj.subjectCode = val
+          }
+          if (canonicalCol === 'HostelDue') rowObj.hostelDue = val
+          if (canonicalCol === 'LibraryDue') rowObj.libraryDue = val
+          if (canonicalCol === 'FeesDue') rowObj.feesDue = val
+        }
+        return rowObj
+      })
+
+      setPreview({ headers, rows: normalizedRows, total: normalizedRows.length })
     }
     reader.readAsText(file)
   }
@@ -46,11 +104,10 @@ export default function CSVUploader({ title, description, columns, sampleCSV, on
     setWarning('')
     try {
       const result = await onUpload(preview.rows)
-      lastUploadedSig.current = preview.signature
-      const successMsg = result?.message || `Successfully saved ${result?.count ?? preview.total} rows`
+      const successMsg = result?.message || `Successfully processed ${result?.count ?? preview.total} rows`
       setSuccess(successMsg)
       if (result?.skipped > 0) {
-        setWarning(`${result.skipped} duplicate record(s) already existed in the database and were automatically skipped.`)
+        setWarning(`${result.skipped} record(s) already existed or were skipped.`)
       }
       setPreview(null)
       if (fileRef.current) fileRef.current.value = ''
