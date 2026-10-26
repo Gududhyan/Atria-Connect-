@@ -9,22 +9,32 @@ export default function CSVUploader({ title, description, columns, sampleCSV, on
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
+  const [warning, setWarning] = useState('')
   const fileRef = useRef(null)
+  const lastUploadedSig = useRef(null)
 
   const handleFile = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    setError(''); setSuccess(''); setPreview(null)
+    setError(''); setSuccess(''); setWarning(''); setPreview(null)
 
     if (!file.name.endsWith('.csv')) { setError('Please upload a .csv file'); return }
 
     const reader = new FileReader()
     reader.onload = (evt) => {
-      const { headers, rows } = parseCSV(evt.target.result)
+      const content = evt.target.result
+      const { headers, rows } = parseCSV(content)
       if (rows.length === 0) { setError('CSV file is empty or has no data rows'); return }
       const missing = columns.filter((c) => !headers.includes(c))
       if (missing.length > 0) { setError(`Missing columns: ${missing.join(', ')}`); return }
-      setPreview({ headers, rows, total: rows.length })
+
+      const signature = `${file.name}_${file.size}_${content.slice(0, 150)}_${rows.length}`
+      if (lastUploadedSig.current === signature) {
+        setError('This identical file was already uploaded in this session. Re-uploading the same duplicate set is not permitted.')
+        return
+      }
+
+      setPreview({ headers, rows, total: rows.length, signature })
     }
     reader.readAsText(file)
   }
@@ -33,9 +43,15 @@ export default function CSVUploader({ title, description, columns, sampleCSV, on
     if (!preview || saving) return
     setSaving(true)
     setError('')
+    setWarning('')
     try {
       const result = await onUpload(preview.rows)
-      setSuccess(`Successfully saved ${result?.count ?? preview.total} rows`)
+      lastUploadedSig.current = preview.signature
+      const successMsg = result?.message || `Successfully saved ${result?.count ?? preview.total} rows`
+      setSuccess(successMsg)
+      if (result?.skipped > 0) {
+        setWarning(`${result.skipped} duplicate record(s) already existed in the database and were automatically skipped.`)
+      }
       setPreview(null)
       if (fileRef.current) fileRef.current.value = ''
     } catch (err) {
@@ -147,6 +163,12 @@ export default function CSVUploader({ title, description, columns, sampleCSV, on
         <div className="p-3 bg-ok-light border border-ok/20 rounded-lg flex items-center gap-2 fade-in">
           <i className="fas fa-circle-check text-ok text-xs" />
           <p className="text-sm text-ok font-medium">{success}</p>
+        </div>
+      )}
+      {warning && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 fade-in">
+          <i className="fas fa-triangle-exclamation text-amber-600 text-xs" />
+          <p className="text-sm text-amber-800 font-medium">{warning}</p>
         </div>
       )}
     </div>

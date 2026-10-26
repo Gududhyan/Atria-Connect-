@@ -10,7 +10,7 @@ import Button from '@/components/ui/Button'
 import Card from '@/components/Card'
 import PageHeader from '@/components/ui/PageHeader'
 
-export default function FacultyAssignmentClient({ students, sem, branch, section }) {
+export default function FacultyAssignmentClient({ students, sem, branch, section, search }) {
   const router = useRouter()
   const [selectedUsn, setSelectedUsn] = useState(null)
   const [savingCode, setSavingCode] = useState(null)
@@ -38,7 +38,7 @@ export default function FacultyAssignmentClient({ students, sem, branch, section
 
       <Card className="mb-6">
         <div className="p-4">
-          <SemBranchSectionSelector sem={sem} branch={branch} section={section} />
+          <SemBranchSectionSelector sem={sem} branch={branch} section={section} search={search} />
         </div>
       </Card>
 
@@ -51,7 +51,7 @@ export default function FacultyAssignmentClient({ students, sem, branch, section
 
       <Card className="overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-          <p className="text-sm font-semibold text-slate-700">{students.length} students found</p>
+          <p className="text-sm font-semibold text-slate-700">{students.length} students found{search ? ` matching "${search}"` : ''}</p>
         </div>
         <div className="max-h-[55vh] overflow-y-auto scrollbar-thin">
           <table className="w-full">
@@ -77,7 +77,7 @@ export default function FacultyAssignmentClient({ students, sem, branch, section
                 </tr>
               ))}
               {students.length === 0 && (
-                <tr><td colSpan={4} className="px-4 py-12 text-center text-sm text-slate-500">No students match these filters</td></tr>
+                <tr><td colSpan={4} className="px-4 py-12 text-center text-sm text-slate-500">{search ? `No students found matching "${search}"` : 'No students match these filters'}</td></tr>
               )}
             </tbody>
           </table>

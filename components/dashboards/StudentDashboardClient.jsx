@@ -224,20 +224,42 @@ export default function StudentDashboardClient({ student }) {
             </div>
             <div className="p-4 space-y-3">
               {[
-                { label: 'Class Coordinator', icon: 'fa-user-check', status: student.ccApproval, successLabel: 'Signed & Approved' },
-                { label: 'Admin Approval', icon: 'fa-stamp', status: student.hallTicketIssued ? 'approved' : student.adminApproval, successLabel: 'Hall Ticket Issued' }
+                {
+                  label: 'Class Coordinator',
+                  icon: 'fa-user-check',
+                  status: student.ccApproval,
+                  successLabel: 'Signed & Approved',
+                  remarks: student.ccRemarks
+                },
+                {
+                  label: 'Admin Approval',
+                  icon: 'fa-stamp',
+                  status: student.hallTicketIssued ? 'approved' : student.adminApproval,
+                  successLabel: 'Hall Ticket Issued',
+                  remarks: student.adminRemarks
+                }
               ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs flex-shrink-0 ${item.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : item.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-                    <i className={`fas ${item.icon}`} />
+                <div key={item.label} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs flex-shrink-0 ${item.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : item.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                      <i className={`fas ${item.icon}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-700 truncate">{item.label}</p>
+                      <p className={`text-[10px] font-semibold mt-0.5 ${item.status === 'approved' ? 'text-emerald-600' : item.status === 'rejected' ? 'text-red-500' : 'text-amber-600'}`}>
+                        {item.status === 'approved' ? item.successLabel : item.status === 'rejected' ? 'Rejected' : 'Pending Review'}
+                      </p>
+                    </div>
+                    <i className={`fas text-xs ${item.status === 'approved' ? 'fa-circle-check text-emerald-500' : item.status === 'rejected' ? 'fa-circle-xmark text-red-400' : 'fa-clock text-amber-400'}`} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-700 truncate">{item.label}</p>
-                    <p className={`text-[10px] font-semibold mt-0.5 ${item.status === 'approved' ? 'text-emerald-600' : item.status === 'rejected' ? 'text-red-500' : 'text-amber-600'}`}>
-                      {item.status === 'approved' ? item.successLabel : item.status === 'rejected' ? 'Rejected' : 'Pending Review'}
-                    </p>
-                  </div>
-                  <i className={`fas text-xs ${item.status === 'approved' ? 'fa-circle-check text-emerald-500' : item.status === 'rejected' ? 'fa-circle-xmark text-red-400' : 'fa-clock text-amber-400'}`} />
+                  {item.status === 'rejected' && item.remarks && (
+                    <div className="mt-2 pt-2 border-t border-red-100">
+                      <p className="text-xs text-red-600 font-medium">
+                        <i className="fas fa-circle-exclamation mr-1" />
+                        Feedback: {item.remarks}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

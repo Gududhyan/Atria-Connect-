@@ -44,6 +44,7 @@ export default function LoginPage() {
       router.refresh()
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.')
+    } finally {
       setLoading(false)
     }
   }

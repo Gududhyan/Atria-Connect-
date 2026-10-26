@@ -16,6 +16,7 @@ export default async function FacultyPage({ searchParams }) {
       sem={filters.sem}
       branch={filters.branch}
       section={filters.section}
+      search={filters.search}
       facultyName={user.name}
     />
   )

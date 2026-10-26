@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useContext } from 'react'
 import Link from 'next/link'
@@ -90,7 +90,7 @@ export default function Sidebar({ role, extra, onSignOut }) {
               key={item.href}
               href={item.href}
               prefetch
-              onClick={() => document.getElementById('sidebar')?.classList.remove('open')}
+              onClick={() => { if (window.innerWidth < 768) setCollapsed(true) }}
               title={collapsed ? item.label : ''}
               className="w-full flex items-center rounded-xl transition-all duration-200"
               style={{

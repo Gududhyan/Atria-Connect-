@@ -15,5 +15,5 @@ export default async function BulkUploadPage({ searchParams }) {
     getStudentStats()
   ])
 
-  return <BulkUploadClient students={students} stats={stats} sem={filters.sem} branch={filters.branch} section={filters.section} />
+  return <BulkUploadClient students={students} stats={stats} sem={filters.sem} branch={filters.branch} section={filters.section} search={filters.search} />
 }

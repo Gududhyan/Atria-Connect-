@@ -12,21 +12,24 @@ import Card from '@/components/Card'
 import PageHeader from '@/components/ui/PageHeader'
 import DocumentPreviewModal from '@/components/DocumentPreviewModal'
 
-export default function CCDashboardClient({ students, sem, branch, section }) {
+export default function CCDashboardClient({ students, sem, branch, section, search }) {
   const router = useRouter()
   const [detailUsn, setDetailUsn] = useState(null)
   const [previewDoc, setPreviewDoc] = useState(null)
   const [busyUsn, setBusyUsn] = useState(null)
   const [error, setError] = useState('')
+  const [rejectModalStudent, setRejectModalStudent] = useState(null)
+  const [rejectFeedback, setRejectFeedback] = useState('')
+  const [batchBusy, setBatchBusy] = useState(false)
   const [, startTransition] = useTransition()
 
   const detail = students.find((s) => s.usn === detailUsn) || null
 
-  const decide = async (usn, approval) => {
+  const decide = async (usn, approval, remarks = '') => {
     setBusyUsn(usn)
     setError('')
     try {
-      await updateCCApproval(usn, approval)
+      await updateCCApproval(usn, approval, remarks)
       startTransition(() => router.refresh())
     } catch (err) {
       setError(err.message || 'Failed to update approval')
@@ -35,13 +38,58 @@ export default function CCDashboardClient({ students, sem, branch, section }) {
     }
   }
 
+  const readyForCCStudents = students.filter(
+    (s) =>
+      s.subjects.every((sub) => sub.clearance === 'yes') &&
+      s.hostelDue === 0 &&
+      s.libraryDue === 0 &&
+      s.feesDue === 0 &&
+      s.ccApproval !== 'approved'
+  )
+
+  const handleBatchApprove = async () => {
+    if (readyForCCStudents.length === 0 || batchBusy || busyUsn) return
+    if (!window.confirm(`Are you sure you want to approve all ${readyForCCStudents.length} fully cleared students in this view?`)) return
+
+    setBatchBusy(true)
+    setError('')
+    try {
+      await Promise.all(readyForCCStudents.map((s) => updateCCApproval(s.usn, 'approved', '')))
+      startTransition(() => router.refresh())
+    } catch (err) {
+      setError(err.message || 'Failed to approve students in batch')
+    } finally {
+      setBatchBusy(false)
+    }
+  }
+
+  const openRejectModal = (student) => {
+    setRejectModalStudent(student)
+    setRejectFeedback(student.ccRemarks || '')
+  }
+
+  const canConfirmReject = rejectFeedback.trim().length >= 3
+
+  const confirmReject = async () => {
+    if (!rejectModalStudent) return
+    const feedback = rejectFeedback.trim()
+    if (feedback.length < 3) {
+      setError('A specific reason (minimum 3 characters) is required to reject.')
+      return
+    }
+    const usn = rejectModalStudent.usn
+    setRejectModalStudent(null)
+    setRejectFeedback('')
+    await decide(usn, 'rejected', feedback)
+  }
+
   return (
     <div className="fade-in">
       <PageHeader title="Review & Approve" subtitle="Review all clearances and dues, then approve or reject hall tickets" />
 
       <Card className="mb-6">
         <div className="p-4">
-          <SemBranchSectionSelector sem={sem} branch={branch} section={section} />
+          <SemBranchSectionSelector sem={sem} branch={branch} section={section} search={search} />
         </div>
       </Card>
 
@@ -53,8 +101,19 @@ export default function CCDashboardClient({ students, sem, branch, section }) {
       )}
 
       <div className="card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-[#E8ECF2] bg-slate-50/60 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-700">{students.length} students found</p>
+        <div className="px-5 py-3.5 border-b border-[#E8ECF2] bg-slate-50/60 flex items-center justify-between flex-wrap gap-2">
+          <p className="text-sm font-semibold text-slate-700">
+            {students.length} students found{search ? ` matching "${search}"` : ''}
+          </p>
+          <Button
+            onClick={handleBatchApprove}
+            variant="success"
+            size="xs"
+            disabled={readyForCCStudents.length === 0 || batchBusy || busyUsn !== null}
+            title={readyForCCStudents.length > 0 ? `Approve all ${readyForCCStudents.length} fully cleared students in this view` : 'No pending cleared students in this view'}>
+            <i className={`fas ${batchBusy ? 'fa-circle-notch fa-spin' : 'fa-check-double'} mr-1.5`} />
+            Approve All Cleared ({readyForCCStudents.length})
+          </Button>
         </div>
         <div className="max-h-[55vh] overflow-y-auto scrollbar-thin">
           <table className="w-full">
@@ -90,19 +149,65 @@ export default function CCDashboardClient({ students, sem, branch, section }) {
                         : <span className="text-xs text-slate-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {s.ccApproval === 'approved' ? <Badge type="ok"><i className="fas fa-signature mr-1" />Signed</Badge>
-                        : s.ccApproval === 'rejected' ? <Badge type="no">Rejected</Badge>
-                        : <Badge type="warn">Pending</Badge>}
+                      {s.ccApproval === 'approved' ? (
+                        <Badge type="ok"><i className="fas fa-signature mr-1" />Signed</Badge>
+                      ) : s.ccApproval === 'rejected' ? (
+                        <div className="inline-block" title={s.ccRemarks ? `Reason: ${s.ccRemarks}` : 'Rejected'}>
+                          <Badge type="no"><i className="fas fa-circle-xmark mr-1" />Rejected</Badge>
+                        </div>
+                      ) : (
+                        <Badge type="warn">Pending</Badge>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button onClick={() => setDetailUsn(s.usn)} variant="secondary" size="xs"><i className="fas fa-eye" /></Button>
-                        {!s.hallTicketIssued && s.ccApproval !== 'approved' && (
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                        <Button onClick={() => setDetailUsn(s.usn)} variant="secondary" size="xs" title="View details">
+                          <i className="fas fa-eye" />
+                        </Button>
+
+                        {/* If rejected: Provide option to change reject to accept once student completes work */}
+                        {s.ccApproval === 'rejected' && (
+                          <Button
+                            onClick={() => decide(s.usn, 'approved')}
+                            variant="success"
+                            size="xs"
+                            title="Change to Approved (Student completed required work)"
+                            disabled={busy}>
+                            <i className={`fas ${busy ? 'fa-circle-notch fa-spin' : 'fa-check'} mr-1`} />
+                            Approve
+                          </Button>
+                        )}
+
+                        {/* If approved: Allow revoking or changing to rejected if needed */}
+                        {s.ccApproval === 'approved' && (
+                          <Button
+                            onClick={() => openRejectModal(s)}
+                            variant="danger"
+                            size="xs"
+                            title="Revoke / Change to Rejected"
+                            disabled={busy}>
+                            <i className="fas fa-xmark mr-1" />
+                            Reject
+                          </Button>
+                        )}
+
+                        {/* If pending: Show both Approve and Reject */}
+                        {s.ccApproval === 'pending' && (
                           <>
-                            <Button onClick={() => decide(s.usn, 'approved')} variant="success" size="xs" title="Approve" disabled={busy}>
+                            <Button
+                              onClick={() => decide(s.usn, 'approved')}
+                              variant="success"
+                              size="xs"
+                              title="Sign & Approve"
+                              disabled={busy}>
                               <i className={`fas ${busy ? 'fa-circle-notch fa-spin' : 'fa-check'}`} />
                             </Button>
-                            <Button onClick={() => decide(s.usn, 'rejected')} variant="danger" size="xs" title="Reject" disabled={busy}>
+                            <Button
+                              onClick={() => openRejectModal(s)}
+                              variant="danger"
+                              size="xs"
+                              title="Reject with feedback"
+                              disabled={busy}>
                               <i className="fas fa-xmark" />
                             </Button>
                           </>
@@ -113,13 +218,14 @@ export default function CCDashboardClient({ students, sem, branch, section }) {
                 )
               })}
               {students.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-sm text-slate-500">No students match these filters</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-sm text-slate-500">{search ? `No students found matching "${search}"` : 'No students match these filters'}</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* Student Details Modal with in-modal Decision buttons */}
       {detail && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDetailUsn(null)}>
           <div className="card rounded-[20px] shadow-modal w-full max-w-3xl max-h-[85vh] overflow-hidden fade-in" onClick={(e) => e.stopPropagation()}>
@@ -136,6 +242,56 @@ export default function CCDashboardClient({ students, sem, branch, section }) {
             </div>
 
             <div className="p-6 max-h-[65vh] overflow-y-auto scrollbar-thin space-y-4">
+              {/* CC Current Decision Banner */}
+              <div className={`p-4 rounded-xl border flex items-center justify-between ${detail.ccApproval === 'approved' ? 'bg-emerald-50 border-emerald-200' : detail.ccApproval === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600">CC Sign-off:</span>
+                    {detail.ccApproval === 'approved' && <Badge type="ok">Approved</Badge>}
+                    {detail.ccApproval === 'rejected' && <Badge type="no">Rejected</Badge>}
+                    {detail.ccApproval === 'pending' && <Badge type="warn">Pending</Badge>}
+                  </div>
+                  {detail.ccApproval === 'rejected' && detail.ccRemarks && (
+                    <p className="text-xs text-red-700 font-medium mt-1.5">
+                      <i className="fas fa-comment-dots mr-1" /><strong>Reason:</strong> {detail.ccRemarks}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {detail.ccApproval === 'rejected' ? (
+                    <Button
+                      onClick={() => { decide(detail.usn, 'approved'); setDetailUsn(null) }}
+                      variant="success"
+                      size="sm">
+                      <i className="fas fa-check mr-1.5" />Change to Approved
+                    </Button>
+                  ) : detail.ccApproval === 'approved' ? (
+                    <Button
+                      onClick={() => openRejectModal(detail)}
+                      variant="danger"
+                      size="sm">
+                      <i className="fas fa-xmark mr-1.5" />Revoke / Reject
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={() => { decide(detail.usn, 'approved'); setDetailUsn(null) }}
+                        variant="success"
+                        size="sm">
+                        <i className="fas fa-check mr-1.5" />Approve
+                      </Button>
+                      <Button
+                        onClick={() => openRejectModal(detail)}
+                        variant="danger"
+                        size="sm">
+                        <i className="fas fa-xmark mr-1.5" />Reject
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <h4 className="text-sm font-bold text-slate-700 mb-2">Subject Clearances</h4>
                 <div className="space-y-2">
@@ -194,12 +350,82 @@ export default function CCDashboardClient({ students, sem, branch, section }) {
                   </div>
                 )}
               </div>
+
+              {/* Activity & Audit History */}
+              <div className="pt-2 border-t border-slate-100">
+                <h4 className="text-sm font-bold text-slate-700 mb-2">Activity &amp; Audit History</h4>
+                {(detail.activityLog || []).length === 0 ? (
+                  <p className="text-xs text-slate-500 italic">No activity recorded yet.</p>
+                ) : (
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {detail.activityLog.map((log, idx) => (
+                      <div key={idx} className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="font-bold text-slate-800">{log.action}</span>
+                          <span className="text-[10px] text-slate-400">
+                            {log.timestamp ? new Date(log.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : ''}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-600 gap-2">
+                          <span>By: <strong className="text-slate-700">{log.performedBy || 'System'}</strong></span>
+                          {log.remarks && <span className="text-slate-500 italic truncate max-w-[260px]" title={log.remarks}>{log.remarks}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="px-6 py-3.5 border-t border-slate-100 bg-slate-50/80 flex items-center justify-end">
               <button onClick={() => setDetailUsn(null)} className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition-colors">
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject with Feedback Modal */}
+      {rejectModalStudent && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setRejectModalStudent(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                <i className="fas fa-circle-xmark text-lg" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-base">Reject CC Approval</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{rejectModalStudent.name} ({rejectModalStudent.usn})</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-2">
+              Provide feedback or instructions so the student knows what work to complete before approval:
+            </p>
+
+            <textarea
+              value={rejectFeedback}
+              onChange={(e) => setRejectFeedback(e.target.value)}
+              placeholder="e.g. Complete pending lab manual, Clear hostel dues, or Meet CC in cabin..."
+              rows="3"
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 resize-none mb-2"
+              autoFocus
+            />
+
+            {!canConfirmReject && (
+              <p className="text-xs text-red-500 mb-3">
+                <i className="fas fa-circle-info mr-1" />A specific reason (minimum 3 characters) is required to reject.
+              </p>
+            )}
+
+            <div className="flex items-center justify-end gap-2">
+              <Button onClick={() => setRejectModalStudent(null)} variant="secondary" size="sm">
+                Cancel
+              </Button>
+              <Button onClick={confirmReject} variant="danger" size="sm" disabled={!canConfirmReject || busyUsn !== null}>
+                <i className="fas fa-xmark mr-1" />Confirm Rejection
+              </Button>
             </div>
           </div>
         </div>

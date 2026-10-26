@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { connectDB } from '@/lib/db'
 import { signToken, cookieOptions, COOKIE_NAME } from '@/lib/auth'
+import { getLocalUserByUsername, getLocalUserByUsn } from '@/lib/local-store'
 import User from '@/models/User'
 import '@/models/Student'
 
@@ -13,19 +14,25 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Role and password are required' }, { status: 400 })
     }
 
-    await connectDB()
+    const conn = await connectDB().catch(() => null)
 
     let user
-    if (role === 'student') {
-      if (!usn) {
-        return NextResponse.json({ message: 'USN is required for student login' }, { status: 400 })
-      }
-      user = await User.findOne({ role: 'student', usn: usn.toUpperCase() }).populate('student')
+    if (!conn) {
+      user = role === 'student'
+        ? getLocalUserByUsn(usn)
+        : getLocalUserByUsername(role, username)
     } else {
-      if (!username) {
-        return NextResponse.json({ message: 'Username is required for staff login' }, { status: 400 })
+      if (role === 'student') {
+        if (!usn) {
+          return NextResponse.json({ message: 'USN is required for student login' }, { status: 400 })
+        }
+        user = await User.findOne({ role: 'student', usn: usn.toUpperCase() }).populate('student')
+      } else {
+        if (!username) {
+          return NextResponse.json({ message: 'Username is required for staff login' }, { status: 400 })
+        }
+        user = await User.findOne({ role, username: username.toLowerCase() })
       }
-      user = await User.findOne({ role, username: username.toLowerCase() })
     }
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
@@ -48,6 +55,15 @@ export async function POST(request) {
     return response
   } catch (error) {
     console.error('[login]', error)
-    return NextResponse.json({ message: 'Login failed. Please try again.' }, { status: 500 })
+    const isDbError =
+      error?.name === 'MongooseServerSelectionError' ||
+      error?.code === 'ECONNREFUSED' ||
+      error?.code === 'ENOTFOUND' ||
+      error?.message?.includes('querySrv') ||
+      error?.message?.includes('topology')
+    const message = isDbError
+      ? 'Database connection error: Could not connect to MongoDB. Please check your MONGODB_URI in .env or resume your cluster on cloud.mongodb.com.'
+      : 'Login failed. Please try again.'
+    return NextResponse.json({ message }, { status: 500 })
   }
 }

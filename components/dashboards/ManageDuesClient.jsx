@@ -13,7 +13,7 @@ import PageHeader from '@/components/ui/PageHeader'
 const DUE_LABELS = { hostelDue: 'Hostel Due', libraryDue: 'Library Due', feesDue: 'Fees Due' }
 const DUE_KEYS = ['hostelDue', 'libraryDue', 'feesDue']
 
-export default function ManageDuesClient({ students, sem, branch, section }) {
+export default function ManageDuesClient({ students, sem, branch, section, search }) {
   const router = useRouter()
   const [selectedUsn, setSelectedUsn] = useState(null)
   const [editValues, setEditValues] = useState({})
@@ -59,13 +59,13 @@ export default function ManageDuesClient({ students, sem, branch, section }) {
 
       <Card className="mb-6">
         <div className="p-4">
-          <SemBranchSectionSelector sem={sem} branch={branch} section={section} />
+          <SemBranchSectionSelector sem={sem} branch={branch} section={section} search={search} />
         </div>
       </Card>
 
       <Card className="overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-          <p className="text-sm font-semibold text-slate-700">{students.length} students found</p>
+          <p className="text-sm font-semibold text-slate-700">{students.length} students found{search ? ` matching "${search}"` : ''}</p>
         </div>
         <div className="max-h-[55vh] overflow-y-auto scrollbar-thin">
           <table className="w-full">
@@ -97,7 +97,7 @@ export default function ManageDuesClient({ students, sem, branch, section }) {
                 </tr>
               ))}
               {students.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-slate-500">No students match these filters</td></tr>
+                <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-slate-500">{search ? `No students found matching "${search}"` : 'No students match these filters'}</td></tr>
               )}
             </tbody>
           </table>
