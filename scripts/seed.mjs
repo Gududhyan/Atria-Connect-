@@ -77,7 +77,7 @@ async function seedStudents({ reset }) {
 
 async function main() {
   const reset = process.argv.includes('--reset')
-  await connectDB()
+  if (!(await connectDB())) throw new Error('Could not connect to MongoDB — check MONGODB_URI')
   await seedStaff()
   await seedStudents({ reset })
   console.log('\nDatabase seeded successfully')

@@ -9,9 +9,7 @@ export const POST = handler(
     assertOwnUsn(user, params.usn)
 
     const formData = await request.formData()
-    const { url, name } = await storeUpload(formData.get('document'))
-
-    return addDocument(params.usn, { name, url })
+    return addDocument(params.usn, () => storeUpload(formData.get('document')))
   },
   { revalidate: true }
 )

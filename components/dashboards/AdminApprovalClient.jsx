@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BRANCHES, SEMESTERS, SECTIONS, PLACEMENT_OPTIONS } from '@/lib/constants'
 import { updateAdminApproval, updateStudentDetails } from '@/lib/api-client'
+import { hallTicketBlocker } from '@/lib/rules'
 import SemBranchSectionSelector from '@/components/SemBranchSectionSelector'
 import Badge from '@/components/Badge'
 import DueDisplay from '@/components/DueDisplay'
@@ -27,10 +28,7 @@ export default function AdminApprovalClient({ students, sem, branch, section, se
 
   const detail = students.find((s) => s.usn === detailUsn) || null
 
-  const canApprove = (s) =>
-    s.subjects.every((sub) => sub.clearance === 'yes') &&
-    s.hostelDue === 0 && s.libraryDue === 0 && s.feesDue === 0 &&
-    s.ccApproval === 'approved'
+  const canApprove = (s) => hallTicketBlocker(s) === null
 
   const issue = async (usn) => {
     setBusyUsn(usn)
@@ -74,6 +72,14 @@ export default function AdminApprovalClient({ students, sem, branch, section, se
     }
   }
 
+  // Quote every text cell and defuse leading =,+,-,@ so spreadsheet apps
+  // don't execute names/remarks as formulas (CSV injection).
+  const csvCell = (value) => {
+    const text = String(value ?? '')
+    const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text
+    return `"${safe.replace(/"/g, '""')}"`
+  }
+
   const exportToCSV = () => {
     if (students.length === 0) return
     const headers = [
@@ -102,7 +108,7 @@ export default function AdminApprovalClient({ students, sem, branch, section, se
       const adminStatus = s.hallTicketIssued ? 'Issued' : s.adminApproval === 'rejected' ? 'Rejected' : 'Pending'
       return [
         s.usn,
-        `"${(s.name || '').replace(/"/g, '""')}"`,
+        csvCell(s.name),
         s.semester,
         s.branchCode,
         s.section,
@@ -113,10 +119,10 @@ export default function AdminApprovalClient({ students, sem, branch, section, se
         s.feesDue || 0,
         totalDue,
         s.ccApproval || 'pending',
-        `"${(s.ccRemarks || '').replace(/"/g, '""')}"`,
+        csvCell(s.ccRemarks),
         adminStatus,
-        `"${(s.adminRemarks || '').replace(/"/g, '""')}"`,
-        s.placement || ''
+        csvCell(s.adminRemarks),
+        csvCell(s.placement)
       ]
     })
 

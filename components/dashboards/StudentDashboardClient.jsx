@@ -291,6 +291,7 @@ export default function StudentDashboardClient({ student }) {
             <input
               type="file"
               id="docUpload"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files[0]

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { BRANCHES } from '@/lib/constants'
 import { updateCCApproval } from '@/lib/api-client'
+import { isReadyForCC } from '@/lib/rules'
 import SemBranchSectionSelector from '@/components/SemBranchSectionSelector'
 import Badge from '@/components/Badge'
 import DueDisplay from '@/components/DueDisplay'
@@ -38,14 +39,7 @@ export default function CCDashboardClient({ students, sem, branch, section, sear
     }
   }
 
-  const readyForCCStudents = students.filter(
-    (s) =>
-      s.subjects.every((sub) => sub.clearance === 'yes') &&
-      s.hostelDue === 0 &&
-      s.libraryDue === 0 &&
-      s.feesDue === 0 &&
-      s.ccApproval !== 'approved'
-  )
+  const readyForCCStudents = students.filter((s) => isReadyForCC(s) && s.ccApproval !== 'approved')
 
   const handleBatchApprove = async () => {
     if (readyForCCStudents.length === 0 || batchBusy || busyUsn) return
