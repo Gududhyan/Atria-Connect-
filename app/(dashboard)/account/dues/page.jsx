@@ -10,5 +10,5 @@ export default async function ManageDuesPage({ searchParams }) {
   const filters = parseFilters(await searchParams)
   const students = await listStudents(toQuery(filters), user)
 
-  return <ManageDuesClient students={students} sem={filters.sem} branch={filters.branch} section={filters.section} />
+  return <ManageDuesClient students={students} sem={filters.sem} branch={filters.branch} section={filters.section} search={filters.search} />
 }

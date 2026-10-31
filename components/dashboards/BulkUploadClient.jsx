@@ -36,7 +36,7 @@ const TABS = [
   { id: 'placement', label: 'Update Placements', icon: 'fa-briefcase' }
 ]
 
-export default function BulkUploadClient({ students, stats, sem, branch, section }) {
+export default function BulkUploadClient({ students, stats, sem, branch, section, search }) {
   const router = useRouter()
   const [tab, setTab] = useState('students')
   const [placementFilter, setPlacementFilter] = useState('')
@@ -172,7 +172,7 @@ export default function BulkUploadClient({ students, stats, sem, branch, section
           </div>
 
           <div className="p-4 border-b border-slate-100 bg-slate-50/50 space-y-3">
-            <SemBranchSectionSelector sem={sem} branch={branch} section={section} />
+            <SemBranchSectionSelector sem={sem} branch={branch} section={section} search={search} />
             <div className="flex flex-wrap gap-3 items-center">
               <select
                 value={placementFilter}
@@ -221,7 +221,7 @@ export default function BulkUploadClient({ students, stats, sem, branch, section
                   </tr>
                 ))}
                 {visible.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-12 text-center text-sm text-slate-500">No students match these filters</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-12 text-center text-sm text-slate-500">{search ? `No students found matching "${search}"` : 'No students match these filters'}</td></tr>
                 )}
               </tbody>
             </table>

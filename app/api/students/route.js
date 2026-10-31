@@ -7,9 +7,10 @@ export const GET = handler(null, async ({ request, user }) => {
   const { searchParams } = new URL(request.url)
   return listStudents(
     {
-      semester: searchParams.get('semester'),
-      branchCode: searchParams.get('branchCode'),
-      section: searchParams.get('section')
+      semester: searchParams.get('semester') || undefined,
+      branchCode: searchParams.get('branchCode') || undefined,
+      section: searchParams.get('section') || undefined,
+      search: searchParams.get('search') || undefined
     },
     user
   )

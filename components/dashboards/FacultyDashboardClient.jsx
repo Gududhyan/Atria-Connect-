@@ -34,7 +34,7 @@ function buildRemarks(value) {
   return [selected, custom].filter(Boolean).join(' | ')
 }
 
-export default function FacultyDashboardClient({ students, sem, branch, section, facultyName }) {
+export default function FacultyDashboardClient({ students, sem, branch, section, search, facultyName }) {
   const router = useRouter()
   const [selectedUsn, setSelectedUsn] = useState(null)
   const [form, setForm] = useState({})
@@ -75,13 +75,24 @@ export default function FacultyDashboardClient({ students, sem, branch, section,
   const saveClearance = async () => {
     if (!selected || busy) return
 
+    // Check if any subject is marked 'no' without a reason — block the save.
+    const missingReasons = Object.entries(form).filter(
+      ([, value]) => value.clearance === 'no' && !buildRemarks(value)
+    )
+    if (missingReasons.length > 0) {
+      setError('Please add a reason for all subjects marked as not cleared before saving.')
+      return
+    }
+
     const payload = Object.entries(form)
-      // "Not cleared" without any reason is rejected by the UI contract below.
-      .filter(([, value]) => !(value.clearance === 'no' && !buildRemarks(value)))
-      .map(([code, value]) => ({ code, clearance: value.clearance, remarks: buildRemarks(value) }))
+      .map(([code, value]) => ({
+        code,
+        clearance: value.clearance,
+        remarks: value.clearance === 'yes' ? '' : buildRemarks(value)
+      }))
 
     if (payload.length === 0) {
-      setError('Add a reason before marking a subject as not cleared.')
+      setError('No subjects to save.')
       return
     }
 
@@ -168,7 +179,7 @@ export default function FacultyDashboardClient({ students, sem, branch, section,
 
       <Card className="mb-6">
         <div className="p-4">
-          <SemBranchSectionSelector sem={sem} branch={branch} section={section} />
+          <SemBranchSectionSelector sem={sem} branch={branch} section={section} search={search} />
         </div>
       </Card>
 
@@ -190,14 +201,27 @@ export default function FacultyDashboardClient({ students, sem, branch, section,
       )}
 
       <div className="card overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-[#E8ECF2] bg-slate-50/60">
-          <p className="text-sm font-semibold text-slate-700">{withAssigned.length} students with your assigned subjects</p>
+        <div className="px-5 py-3.5 border-b border-[#E8ECF2] bg-slate-50/60 flex items-center justify-between">
+          <p className="text-sm font-semibold text-slate-700">
+            {withAssigned.length} students with your assigned subjects{search ? ` matching "${search}"` : ''}
+          </p>
+          {search && students.length > withAssigned.length && (
+            <p className="text-xs text-slate-400">
+              ({students.length - withAssigned.length} other matching students assigned to other faculty)
+            </p>
+          )}
         </div>
 
         {withAssigned.length === 0 ? (
           <div className="p-12 text-center">
             <i className="fas fa-inbox text-3xl text-slate-300 mb-3" />
-            <p className="text-sm text-slate-500">No students found with your assigned subjects in this selection</p>
+            <p className="text-sm text-slate-500">
+              {search && students.length > 0
+                ? `Found ${students.length} student(s) matching "${search}", but none are assigned to you (${facultyName}).`
+                : search
+                  ? `No students found matching "${search}".`
+                  : 'No students found with your assigned subjects in this selection.'}
+            </p>
           </div>
         ) : (
           <div className="max-h-[60vh] overflow-y-auto scrollbar-thin">
@@ -290,7 +314,7 @@ export default function FacultyDashboardClient({ students, sem, branch, section,
                       </div>
                       <div className="flex gap-1.5">
                         <button
-                          onClick={() => updateForm(sub.code, 'clearance', 'yes')}
+                          onClick={() => setForm((prev) => ({ ...prev, [sub.code]: { ...prev[sub.code], clearance: 'yes', remarks: [], customRemark: '' } }))}
                           className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${fv.clearance === 'yes' ? 'bg-ok text-white shadow-sm shadow-ok/30' : 'bg-ok-light text-ok hover:bg-ok/10'}`}>
                           <i className="fas fa-check mr-1" />YES
                         </button>

@@ -30,10 +30,12 @@ export default function Sidebar({ role, extra, onSignOut }) {
   return (
     <aside id="sidebar" className="fixed inset-y-0 left-0 z-50 flex flex-col no-print select-none" style={panelStyle}>
       {/* Logo (click = toggle) */}
-      <div
-        className="flex items-center cursor-pointer"
+      <button
+        type="button"
+        className="flex items-center cursor-pointer w-full bg-transparent border-0"
         style={{ ...divider, padding: collapsed ? '14px 0' : '14px 16px', justifyContent: collapsed ? 'center' : 'flex-start', gap: '12px', minHeight: '64px' }}
         onClick={() => setCollapsed((c) => !c)}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
         <div
           className="relative flex-shrink-0 w-9 h-9 rounded-xl overflow-hidden"
@@ -52,7 +54,7 @@ export default function Sidebar({ role, extra, onSignOut }) {
             <p className="text-[9px] font-semibold text-white/30 uppercase tracking-[0.2em] mt-0.5">No Due Portal</p>
           </div>
         )}
-      </div>
+      </button>
 
       {/* Role badge */}
       <div className="px-3 py-3" style={divider}>
@@ -88,7 +90,7 @@ export default function Sidebar({ role, extra, onSignOut }) {
               key={item.href}
               href={item.href}
               prefetch
-              onClick={() => document.getElementById('sidebar')?.classList.remove('open')}
+              onClick={() => { if (window.innerWidth < 768) setCollapsed(true) }}
               title={collapsed ? item.label : ''}
               className="w-full flex items-center rounded-xl transition-all duration-200"
               style={{

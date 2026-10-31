@@ -3,9 +3,9 @@ import { updateCCApproval } from '@/lib/data/students'
 
 export const PUT = handler(
   ['cc', 'admin'],
-  async ({ request, params }) => {
-    const { approval } = await readJson(request)
-    return updateCCApproval(params.usn, approval)
+  async ({ request, params, user }) => {
+    const { approval, remarks } = await readJson(request)
+    return updateCCApproval(params.usn, approval, remarks, user)
   },
   { revalidate: true }
 )

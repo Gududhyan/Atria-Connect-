@@ -10,5 +10,5 @@ export default async function AdminApprovalPage({ searchParams }) {
   const filters = parseFilters(await searchParams)
   const students = await listStudents(toQuery(filters), user)
 
-  return <AdminApprovalClient students={students} sem={filters.sem} branch={filters.branch} section={filters.section} />
+  return <AdminApprovalClient students={students} sem={filters.sem} branch={filters.branch} section={filters.section} search={filters.search} />
 }

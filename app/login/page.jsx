@@ -44,6 +44,7 @@ export default function LoginPage() {
       router.refresh()
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.')
+    } finally {
       setLoading(false)
     }
   }
@@ -76,9 +77,8 @@ export default function LoginPage() {
                 <button
                   key={r.id}
                   onClick={() => { setRole(r.id); setError('') }}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
-                    role === r.id ? 'border-current shadow-sm' : 'border-[#E8ECF2] hover:border-slate-200 hover:bg-slate-50'
-                  }`}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${role === r.id ? 'border-current shadow-sm' : 'border-[#E8ECF2] hover:border-slate-200 hover:bg-slate-50'
+                    }`}
                   style={role === r.id ? { borderColor: r.color, background: r.bg } : {}}>
                   <div
                     className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -132,6 +132,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPass(!showPass)}
+                    aria-label={showPass ? 'Hide password' : 'Show password'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
                     <i className={`fas ${showPass ? 'fa-eye-slash' : 'fa-eye'} text-xs`} />
                   </button>

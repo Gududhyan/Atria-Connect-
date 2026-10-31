@@ -3,9 +3,9 @@ import { updateAdminApproval } from '@/lib/data/students'
 
 export const PUT = handler(
   ['admin'],
-  async ({ request, params }) => {
-    const { approval } = await readJson(request)
-    return updateAdminApproval(params.usn, approval)
+  async ({ request, params, user }) => {
+    const { approval, remarks } = await readJson(request)
+    return updateAdminApproval(params.usn, approval, remarks, user)
   },
   { revalidate: true }
 )

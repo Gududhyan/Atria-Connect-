@@ -10,5 +10,5 @@ export default async function CCPage({ searchParams }) {
   const filters = parseFilters(await searchParams)
   const students = await listStudents(toQuery(filters), user)
 
-  return <CCDashboardClient students={students} sem={filters.sem} branch={filters.branch} section={filters.section} />
+  return <CCDashboardClient students={students} sem={filters.sem} branch={filters.branch} section={filters.section} search={filters.search} />
 }

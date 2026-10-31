@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { ROLE_META } from '@/lib/nav'
 import ProfileModal from './ProfileModal'
+import { SidebarCtx } from './DashboardLayout'
 
 export default function TopBar({ user, pageTitle, pageSubtitle, onSignOut }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const { setCollapsed } = useContext(SidebarCtx)
 
   const rc = ROLE_META[user?.role] || { color: '#94A3B8', bg: 'rgba(148,163,184,0.1)', label: user?.role || '' }
 
@@ -25,7 +27,7 @@ export default function TopBar({ user, pageTitle, pageSubtitle, onSignOut }) {
           <button
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
             style={{ background: 'rgba(15,23,42,0.06)', border: '1px solid rgba(15,23,42,0.08)' }}
-            onClick={() => document.getElementById('sidebar')?.classList.toggle('open')}>
+            onClick={() => setCollapsed((c) => !c)}>
             <i className="fas fa-bars text-slate-600 text-sm" />
           </button>
 
